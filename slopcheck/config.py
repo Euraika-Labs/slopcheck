@@ -263,6 +263,115 @@ class ObviousPerfDrainConfig(BaseModel):
     enabled: bool = False  # Opt-in: 37K findings is too noisy without scope analysis
 
 
+class ObfuscatedCodeConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class GlobalStateLeakConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class CollectionModifyWhileIteratingConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False
+
+
+class DivisionByZeroRiskConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False
+
+
+class UnreachableCodeAfterReturnConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class ParamReassignmentConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False  # Opt-in: noisy without project-specific tuning
+
+
+class LargeFileConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False  # Opt-in
+    max_lines: int = 500
+
+
+class ShortVariableNameConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False  # Opt-in: noisy
+    min_length: int = 2
+    allowed: list[str] = Field(
+        default_factory=lambda: ["i", "j", "k", "x", "y", "z", "_", "e"]
+    )
+
+
+class GotoUsageConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class AssignmentInConditionalConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class WithinFileDuplicationConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False
+    min_lines: int = 4
+
+
+class EarlyReturnOpportunityConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True  # Opt-in: style opinion
+
+
+class RecursionWithoutLimitConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False  # Opt-in: many false positives
+
+
+class DeepInheritanceConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True  # Opt-in
+
+
+class LargeAnonymousFunctionConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False  # Opt-in
+    max_lines: int = 20
+
+
+class DebugCodeLeftConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class StaleCommentConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False  # Opt-in: very noisy
+
+
 class RulesConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -335,6 +444,43 @@ class RulesConfig(BaseModel):
     weak_hash: WeakHashConfig = Field(default_factory=WeakHashConfig)
     regex_dos: RegexDosConfig = Field(default_factory=RegexDosConfig)
     obvious_perf_drain: ObviousPerfDrainConfig = Field(default_factory=ObviousPerfDrainConfig)
+    obfuscated_code: ObfuscatedCodeConfig = Field(default_factory=ObfuscatedCodeConfig)
+    global_state_leak: GlobalStateLeakConfig = Field(default_factory=GlobalStateLeakConfig)
+    collection_modify_while_iterating: CollectionModifyWhileIteratingConfig = Field(
+        default_factory=CollectionModifyWhileIteratingConfig
+    )
+    division_by_zero_risk: DivisionByZeroRiskConfig = Field(
+        default_factory=DivisionByZeroRiskConfig
+    )
+    unreachable_code_after_return: UnreachableCodeAfterReturnConfig = Field(
+        default_factory=UnreachableCodeAfterReturnConfig
+    )
+    param_reassignment: ParamReassignmentConfig = Field(
+        default_factory=ParamReassignmentConfig
+    )
+    large_file: LargeFileConfig = Field(default_factory=LargeFileConfig)
+    short_variable_name: ShortVariableNameConfig = Field(
+        default_factory=ShortVariableNameConfig
+    )
+    goto_usage: GotoUsageConfig = Field(default_factory=GotoUsageConfig)
+    assignment_in_conditional: AssignmentInConditionalConfig = Field(
+        default_factory=AssignmentInConditionalConfig
+    )
+    within_file_duplication: WithinFileDuplicationConfig = Field(
+        default_factory=WithinFileDuplicationConfig
+    )
+    early_return_opportunity: EarlyReturnOpportunityConfig = Field(
+        default_factory=EarlyReturnOpportunityConfig
+    )
+    recursion_without_limit: RecursionWithoutLimitConfig = Field(
+        default_factory=RecursionWithoutLimitConfig
+    )
+    deep_inheritance: DeepInheritanceConfig = Field(default_factory=DeepInheritanceConfig)
+    large_anonymous_function: LargeAnonymousFunctionConfig = Field(
+        default_factory=LargeAnonymousFunctionConfig
+    )
+    debug_code_left: DebugCodeLeftConfig = Field(default_factory=DebugCodeLeftConfig)
+    stale_comment: StaleCommentConfig = Field(default_factory=StaleCommentConfig)
 
 
 class AppConfig(BaseModel):
