@@ -372,6 +372,80 @@ class StaleCommentConfig(BaseModel):
     enabled: bool = False  # Opt-in: very noisy
 
 
+class ContradictoryNullCheckConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class LockWithoutReleaseConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class IdorRiskConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True  # Opt-in low-confidence; enabled by default for awareness
+
+
+class ThreadUnsafeGlobalConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class ManyPositionalArgsConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+    max_positional: int = 4
+
+
+class RedundantSqlIndexConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class UseAfterFreeConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class WeakFunctionNameConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class MultipleClassesPerFileConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class OversizedClassConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+    max_methods: int = 10
+
+
+class BreakInNestedLoopConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class DangerousShellInMarkdownConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
 class RulesConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -481,6 +555,36 @@ class RulesConfig(BaseModel):
     )
     debug_code_left: DebugCodeLeftConfig = Field(default_factory=DebugCodeLeftConfig)
     stale_comment: StaleCommentConfig = Field(default_factory=StaleCommentConfig)
+    contradictory_null_check: ContradictoryNullCheckConfig = Field(
+        default_factory=ContradictoryNullCheckConfig
+    )
+    lock_without_release: LockWithoutReleaseConfig = Field(
+        default_factory=LockWithoutReleaseConfig
+    )
+    idor_risk: IdorRiskConfig = Field(default_factory=IdorRiskConfig)
+    thread_unsafe_global: ThreadUnsafeGlobalConfig = Field(
+        default_factory=ThreadUnsafeGlobalConfig
+    )
+    many_positional_args: ManyPositionalArgsConfig = Field(
+        default_factory=ManyPositionalArgsConfig
+    )
+    redundant_sql_index: RedundantSqlIndexConfig = Field(
+        default_factory=RedundantSqlIndexConfig
+    )
+    use_after_free: UseAfterFreeConfig = Field(default_factory=UseAfterFreeConfig)
+    weak_function_name: WeakFunctionNameConfig = Field(
+        default_factory=WeakFunctionNameConfig
+    )
+    multiple_classes_per_file: MultipleClassesPerFileConfig = Field(
+        default_factory=MultipleClassesPerFileConfig
+    )
+    oversized_class: OversizedClassConfig = Field(default_factory=OversizedClassConfig)
+    break_in_nested_loop: BreakInNestedLoopConfig = Field(
+        default_factory=BreakInNestedLoopConfig
+    )
+    dangerous_shell_in_markdown: DangerousShellInMarkdownConfig = Field(
+        default_factory=DangerousShellInMarkdownConfig
+    )
 
 
 class AppConfig(BaseModel):

@@ -19,6 +19,7 @@ DEFAULT_CODE_EXTENSIONS = {
     ".cpp",
     ".h",
     ".hpp",
+    ".md",
 }
 
 

@@ -9,11 +9,14 @@ from slopcheck.rules.generic.assignment_in_conditional import AssignmentInCondit
 from slopcheck.rules.generic.bare_except_pass import BareExceptPassRule
 from slopcheck.rules.generic.bare_except_pass_go import BareExceptPassGoRule
 from slopcheck.rules.generic.bare_except_pass_js import BareExceptPassJsRule
+from slopcheck.rules.generic.break_in_nested_loop import BreakInNestedLoopRule
 from slopcheck.rules.generic.collection_modify_while_iterating import (
     CollectionModifyWhileIteratingRule,
 )
 from slopcheck.rules.generic.console_log_in_production import ConsoleLogInProductionRule
+from slopcheck.rules.generic.contradictory_null_check import ContradictoryNullCheckRule
 from slopcheck.rules.generic.cross_language_idiom import CrossLanguageIdiomRule
+from slopcheck.rules.generic.dangerous_shell_in_markdown import DangerousShellInMarkdownRule
 from slopcheck.rules.generic.dead_code_comment import DeadCodeCommentRule
 from slopcheck.rules.generic.debug_code_left import DebugCodeLeftRule
 from slopcheck.rules.generic.deep_inheritance import DeepInheritanceRule
@@ -27,6 +30,7 @@ from slopcheck.rules.generic.go_missing_defer import GoMissingDeferRule
 from slopcheck.rules.generic.goto_usage import GotoUsageRule
 from slopcheck.rules.generic.hallucinated_placeholder import HallucinatedPlaceholderRule
 from slopcheck.rules.generic.hardcoded_secret import HardcodedSecretRule
+from slopcheck.rules.generic.idor_risk import IdorRiskRule
 from slopcheck.rules.generic.incomplete_error_message import IncompleteErrorMessageRule
 from slopcheck.rules.generic.insecure_default import InsecureDefaultRule
 from slopcheck.rules.generic.js_await_in_loop import JsAwaitInLoopRule
@@ -38,15 +42,20 @@ from slopcheck.rules.generic.js_unhandled_promise import JsUnhandledPromiseRule
 from slopcheck.rules.generic.large_anonymous_function import LargeAnonymousFunctionRule
 from slopcheck.rules.generic.large_file import LargeFileRule
 from slopcheck.rules.generic.large_function import LargeFunctionRule
+from slopcheck.rules.generic.lock_without_release import LockWithoutReleaseRule
+from slopcheck.rules.generic.many_positional_args import ManyPositionalArgsRule
 from slopcheck.rules.generic.missing_default_branch import MissingDefaultBranchRule
+from slopcheck.rules.generic.multiple_classes_per_file import MultipleClassesPerFileRule
 from slopcheck.rules.generic.obfuscated_code import ObfuscatedCodeRule
 from slopcheck.rules.generic.obvious_perf_drain import ObviousPerfDrainRule
+from slopcheck.rules.generic.oversized_class import OversizedClassRule
 from slopcheck.rules.generic.param_reassignment import ParamReassignmentRule
 from slopcheck.rules.generic.placeholder_tokens import PlaceholderTokensRule
 from slopcheck.rules.generic.python_mutable_default import PythonMutableDefaultRule
 from slopcheck.rules.generic.react_async_useeffect import ReactAsyncUseeffectRule
 from slopcheck.rules.generic.react_index_key import ReactIndexKeyRule
 from slopcheck.rules.generic.recursion_without_limit import RecursionWithoutLimitRule
+from slopcheck.rules.generic.redundant_sql_index import RedundantSqlIndexRule
 from slopcheck.rules.generic.regex_dos import RegexDosRule
 from slopcheck.rules.generic.select_star_sql import SelectStarSqlRule
 from slopcheck.rules.generic.short_variable_name import ShortVariableNameRule
@@ -55,10 +64,13 @@ from slopcheck.rules.generic.stale_comment import StaleCommentRule
 from slopcheck.rules.generic.stub_function_body import StubFunctionBodyRule
 from slopcheck.rules.generic.stub_function_body_go import StubFunctionBodyGoRule
 from slopcheck.rules.generic.stub_function_body_js import StubFunctionBodyJsRule
+from slopcheck.rules.generic.thread_unsafe_global import ThreadUnsafeGlobalRule
 from slopcheck.rules.generic.typescript_any_abuse import TypescriptAnyAbuseRule
 from slopcheck.rules.generic.undeclared_import import UndeclaredImportRule
 from slopcheck.rules.generic.unreachable_code_after_return import UnreachableCodeAfterReturnRule
 from slopcheck.rules.generic.unused_suppression import UnusedSuppressionRule
+from slopcheck.rules.generic.use_after_free import UseAfterFreeRule
+from slopcheck.rules.generic.weak_function_name import WeakFunctionNameRule
 from slopcheck.rules.generic.weak_hash import WeakHashRule
 from slopcheck.rules.generic.within_file_duplication import WithinFileDuplicationRule
 from slopcheck.rules.repo.forbidden_import_edges import ForbiddenImportEdgesRule
@@ -139,4 +151,19 @@ def build_rules() -> list[Rule]:
         # Phase 9: Debug and comment quality
         DebugCodeLeftRule(),
         StaleCommentRule(),
+        # Phase 10: Concurrency, IDOR, and null-check correctness
+        ContradictoryNullCheckRule(),
+        LockWithoutReleaseRule(),
+        IdorRiskRule(),
+        ThreadUnsafeGlobalRule(),
+        # Phase 11: Call-site design, SQL schema, memory safety, naming
+        ManyPositionalArgsRule(),
+        RedundantSqlIndexRule(),
+        UseAfterFreeRule(),
+        WeakFunctionNameRule(),
+        # Phase 12: Structure, control flow, and documentation safety
+        MultipleClassesPerFileRule(),
+        OversizedClassRule(),
+        BreakInNestedLoopRule(),
+        DangerousShellInMarkdownRule(),
     ]
