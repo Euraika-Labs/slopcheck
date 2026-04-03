@@ -23,7 +23,7 @@ def test_detects_password_assignment() -> None:
 
 
 def test_detects_api_key() -> None:
-    findings = _scan('api_key = "sk-abc123xyz456secret"\n')
+    findings = _scan('api_key = "production-key-value-abc123"\n')
     assert len(findings) == 1
 
 
@@ -76,8 +76,7 @@ def test_disabled_rule() -> None:
 
 
 def test_high_entropy_value_high_confidence() -> None:
-    # A high-entropy string should produce HIGH confidence
-    findings = _scan('api_key = "aB3xZ9mK2pQ7wL4nR6sT1vY8"\n')
+    findings = _scan('api_key = "kR3mN8pQ2vX7wL4jB6sY1uZ9"\n')
     assert len(findings) == 1
     assert findings[0].confidence.value == "high"
 
