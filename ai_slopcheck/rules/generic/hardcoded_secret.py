@@ -16,10 +16,14 @@ _SECRET_KEY_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Placeholder strings that are clearly not real secrets
+# Placeholder strings that are clearly not real secrets.
+# Expanded to catch common documentation examples and test fixtures.
 _PLACEHOLDER_RE = re.compile(
-    r"""(?:your[-_]|REPLACE|<[^>]+>|example|xxx+|todo|changeme|placeholder"""
-    r"""|insert[-_]|dummy|fake|test|sample|\.\.\.|N/A)""",
+    r"""(?:your[-_]|REPLACE|CHANGE[-_]?ME|<[^>]+>|example|xxx+|todo|changeme"""
+    r"""|placeholder|insert[-_]|dummy|fake|test|sample|\.\.\.|N/A"""
+    r"""|password\d+|secret\d+|abc\d+|123|my[-_]?secret|my[-_]?password"""
+    r"""|sk[-_]test|pk[-_]test|key[-_]here|fill[-_]in|update[-_]me"""
+    r"""|CHANGE|FIXME|HACK)""",
     re.IGNORECASE,
 )
 
@@ -38,10 +42,21 @@ def _shannon_entropy(value: str) -> float:
     return -sum((c / total) * math.log2(c / total) for c in freq.values())
 
 
-# Path segments that identify test or fixture files — skip those
+# Path segments that identify test, fixture, or documentation files — skip those.
 _TEST_PATH_SEGMENTS = (
     "test", "fixture", "mock", "stub", "example", "spec",
     "seed", "sample", "generated", "vendor", "__generated__",
+    "docs", "doc", "README", "CONTRIBUTING", "CHANGELOG",
+)
+
+# File extensions for documentation — skip these entirely.
+_DOC_EXTENSIONS = frozenset({".md", ".mdx", ".rst", ".txt", ".adoc"})
+
+# Lines that are error messages, log statements, or validation — not real secrets.
+_ERROR_LOG_RE = re.compile(
+    r"""\b(?:throw\b|Error\s*\(|console\.|logger?\.|log\s*\.|warn\s*\("""
+    r"""|raise\b|logging\.|print\s*\()""",
+    re.IGNORECASE,
 )
 
 
@@ -66,10 +81,17 @@ class HardcodedSecretRule(Rule):
         if any(seg in lower_path for seg in _TEST_PATH_SEGMENTS):
             return []
 
+        # Skip documentation files — they commonly show placeholder credentials.
+        if Path(relative_path).suffix.lower() in _DOC_EXTENSIONS:
+            return []
+
         findings: list[Finding] = []
         for lineno, line in enumerate(content.splitlines(), start=1):
             m = _SECRET_KEY_RE.search(line)
             if not m:
+                continue
+            # Skip lines that are error messages, log statements, or validation output.
+            if _ERROR_LOG_RE.search(line):
                 continue
             # Tree-sitter: skip matches inside comments
             ext = Path(relative_path).suffix.lower()

@@ -12,6 +12,15 @@ from ai_slopcheck.rules.base import Rule
 _ASSIGN_IN_IF_RE = re.compile(r"\bif\s*\([^)]*(?<![=!<>])=(?!=)[^)]*\)")
 _COMMENT_RE = re.compile(r"^\s*(?://|/\*|\*)")
 
+# Strip string and template literals to avoid matching `=` inside strings.
+# Handles: 'foo=bar', "foo=bar", `foo=${bar}`
+_STRING_LITERAL_RE = re.compile(
+    r"""'[^'\\]*(?:\\.[^'\\]*)*'|"[^"\\]*(?:\\.[^"\\]*)*"|`[^`\\]*(?:\\.[^`\\]*)*`"""
+)
+
+# Arrow function expressions in conditionals: if (items.filter(x => ...))
+_ARROW_FN_RE = re.compile(r"=>")
+
 
 class AssignmentInConditionalRule(Rule):
     rule_id = "assignment_in_conditional"
@@ -34,7 +43,16 @@ class AssignmentInConditionalRule(Rule):
         for lineno, line in enumerate(content.splitlines(), start=1):
             if _COMMENT_RE.match(line):
                 continue
-            if _ASSIGN_IN_IF_RE.search(line):
+
+            # Strip string literals so `=` inside strings doesn't trigger.
+            # e.g., if (str.includes('key=value')) should not match.
+            cleaned = _STRING_LITERAL_RE.sub('""', line)
+
+            # Skip lines with arrow functions — `=>` leaves a bare `=` after stripping.
+            if _ARROW_FN_RE.search(cleaned):
+                continue
+
+            if _ASSIGN_IN_IF_RE.search(cleaned):
                 findings.append(
                     self.build_finding(
                         relative_path=relative_path,

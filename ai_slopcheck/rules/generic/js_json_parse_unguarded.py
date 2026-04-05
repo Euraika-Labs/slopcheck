@@ -10,6 +10,20 @@ from ai_slopcheck.rules.base import Rule
 _JSON_PARSE_RE = re.compile(r"JSON\.parse\s*\(")
 _TRY_CATCH_RE = re.compile(r"\b(?:try|catch)\b")
 
+# Safe-parse wrapper patterns — if the file defines or imports a safe parser, skip.
+_SAFE_PARSE_RE = re.compile(
+    r"\b(?:safeJsonParse|safeParse|tryParse|parseJSON|jsonSafeParse)\b", re.IGNORECASE
+)
+
+# Known-safe sources: Prisma JSON fields, response.json(), Buffer.toString(), etc.
+_SAFE_SOURCE_RE = re.compile(
+    r"JSON\.parse\s*\(\s*(?:"
+    r"(?:\w+\.(?:json|text|body|data|toString|stringify|value|result|content))"
+    r"|(?:JSON\.stringify)"
+    r"|(?:await\s+\w+\.(?:json|text)\(\))"
+    r")\s*\)"
+)
+
 
 class JsJsonParseUnguardedRule(Rule):
     rule_id = "js_json_parse_unguarded"
@@ -31,13 +45,21 @@ class JsJsonParseUnguardedRule(Rule):
         lines = content.splitlines()
         findings: list[Finding] = []
 
+        # If the file defines or imports a safe-parse wrapper, skip all findings.
+        if _SAFE_PARSE_RE.search(content):
+            return []
+
         for lineno, line in enumerate(lines, start=1):
             if not _JSON_PARSE_RE.search(line):
                 continue
 
-            # Check 3 lines above and 3 lines below for try/catch
-            start = max(0, lineno - 4)  # lineno is 1-based, so -4 gives 3 lines above
-            end = min(len(lines), lineno + 3)  # 3 lines below
+            # Skip JSON.parse of known-safe sources (e.g., response.json(), Prisma fields).
+            if _SAFE_SOURCE_RE.search(line):
+                continue
+
+            # Check 15 lines above and 15 lines below for try/catch (expanded from 3).
+            start = max(0, lineno - 16)  # lineno is 1-based
+            end = min(len(lines), lineno + 15)
             context_lines = lines[start:end]
 
             has_guard = any(_TRY_CATCH_RE.search(ctx) for ctx in context_lines)

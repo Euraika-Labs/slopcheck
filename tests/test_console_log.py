@@ -103,3 +103,21 @@ def test_skips_non_js_ts_extension() -> None:
 def test_detects_jsx_file() -> None:
     findings = _scan("  console.log(props);\n", path="src/Component.jsx")
     assert len(findings) == 1
+
+
+def test_skips_worker_file() -> None:
+    """Worker files are infrastructure — console.log is expected."""
+    findings = _scan("console.log('worker started');\n", path="src/worker/queue.ts")
+    assert len(findings) == 0
+
+
+def test_skips_e2e_file() -> None:
+    findings = _scan("console.log('test');\n", path="e2e/login.spec.ts")
+    assert len(findings) == 0
+
+
+def test_skips_conditional_logging() -> None:
+    """Conditional logging gated by isDev/NODE_ENV should not flag."""
+    code = "if (process.env.NODE_ENV !== 'production') console.log('debug');\n"
+    findings = _scan(code)
+    assert len(findings) == 0

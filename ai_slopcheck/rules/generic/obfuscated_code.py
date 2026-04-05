@@ -53,8 +53,20 @@ class ObfuscatedCodeRule(Rule):
         if _TEST_PATH_RE.search(relative_path):
             return []
 
+        # Skip minified files: .min.js, .min.css, etc.
+        lower_path = relative_path.lower()
+        if ".min." in lower_path:
+            return []
+
+        # Skip vendor/bundled files by detecting long average line length.
+        lines = content.splitlines()
+        if lines:
+            avg_line_len = sum(len(ln) for ln in lines) / len(lines)
+            if avg_line_len > 200:
+                return []
+
         findings: list[Finding] = []
-        for lineno, line in enumerate(content.splitlines(), start=1):
+        for lineno, line in enumerate(lines, start=1):
             if _COMMENT_RE.match(line):
                 continue
 
@@ -67,7 +79,8 @@ class ObfuscatedCodeRule(Rule):
                 label = "atob() base64 decode"
             elif _B64_DECODE_RE.search(line):
                 label = "base64 decode call"
-            elif len(_HEX_ESCAPE_RE.findall(line)) > 3:
+            elif len(_HEX_ESCAPE_RE.findall(line)) > 6:
+                # Raised from 3 to 6 — standard string encoding often has a few hex escapes.
                 label = "dense hex escape sequences"
 
             if label:

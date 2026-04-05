@@ -12,6 +12,12 @@ from ai_slopcheck.rules.base import Rule
 _LOOSE_EQ_RE = re.compile(r"(?<![=!<>])(?<!=)==(?!=)|(?<!!)!=(?!=)")
 _COMMENT_RE = re.compile(r"^\s*(?://|/\*|\*)")
 
+# Idiomatic JS: == null / != null checks both null and undefined. Same for == undefined.
+# These are intentional and widely accepted (even by ESLint eqeqeq with "smart" option).
+_NULLISH_CHECK_RE = re.compile(
+    r"[!=]=\s*(?:null|undefined)\b|\b(?:null|undefined)\s*[!=]="
+)
+
 
 class JsLooseEqualityRule(Rule):
     rule_id = "js_loose_equality"
@@ -35,7 +41,10 @@ class JsLooseEqualityRule(Rule):
             if _COMMENT_RE.match(line):
                 continue
 
-            # Strip inline string literals to avoid false positives in strings
+            # Allow idiomatic == null / != null checks (checks both null and undefined).
+            if _NULLISH_CHECK_RE.search(line):
+                continue
+
             m = _LOOSE_EQ_RE.search(line)
             if m:
                 evidence = line.strip()

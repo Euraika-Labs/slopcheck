@@ -18,6 +18,9 @@ _BRACE_FOR_WHILE_RE = re.compile(
 # Go range loops: for ... {  or for {
 _GO_FOR_RE = re.compile(r"\bfor\b")
 
+# Switch statement — break inside switch is correct JS/Go, not a loop break.
+_SWITCH_RE = re.compile(r"\bswitch\s*[\(\{]|\bswitch\b")
+
 # A standalone `break` statement (not `break <label>` in Go, but we flag those too)
 _BRACE_BREAK_RE = re.compile(r"\bbreak\b")
 
@@ -100,12 +103,17 @@ class BreakInNestedLoopRule(Rule):
     def _scan_brace(self, relative_path: str, content: str) -> list[Finding]:
         """
         Track brace depth and a stack of brace depths at which loops opened.
-        A `break` while the loop stack has >= 2 entries is flagged.
+        Also track switch statements: break inside a switch is correct JS/Go
+        and should not be flagged as a nested-loop break.
+        A `break` while the loop stack has >= 2 entries AND we are not inside
+        a switch body is flagged.
         """
         findings: list[Finding] = []
         brace_depth = 0
         # Stack of brace depths where a loop body starts
         loop_stack: list[int] = []
+        # Stack of brace depths where a switch body starts
+        switch_stack: list[int] = []
 
         for lineno, line in enumerate(content.splitlines(), start=1):
             stripped = line.strip()
@@ -115,24 +123,31 @@ class BreakInNestedLoopRule(Rule):
             opens = line.count("{")
             closes = line.count("}")
 
+            # Detect switch keyword before loop keyword (switch can contain for/while text)
+            if _SWITCH_RE.search(line):
+                switch_stack.append(brace_depth + opens)
+
             # Detect loop keyword before counting opening brace on this line
             if _BRACE_FOR_WHILE_RE.search(line) or _GO_FOR_RE.search(line):
-                # The loop body opens at brace_depth + opens (the `{` on this line)
-                # We push brace_depth + opens so the body depth is > that value.
                 loop_stack.append(brace_depth + opens)
 
             brace_depth += opens
 
-            # Check for break
+            # Check for break — only flag if inside nested loops AND not inside a switch
             if _BRACE_BREAK_RE.search(line) and len(loop_stack) >= 2:
-                findings.append(
-                    self._make_finding(
-                        relative_path=relative_path,
-                        lineno=lineno,
-                        line=stripped,
-                        depth=len(loop_stack),
-                    )
+                # If we are inside a switch body, break targets the switch, not a loop.
+                inside_switch = bool(
+                    switch_stack and switch_stack[-1] >= loop_stack[-1]
                 )
+                if not inside_switch:
+                    findings.append(
+                        self._make_finding(
+                            relative_path=relative_path,
+                            lineno=lineno,
+                            line=stripped,
+                            depth=len(loop_stack),
+                        )
+                    )
 
             brace_depth -= closes
             if brace_depth < 0:
@@ -141,6 +156,9 @@ class BreakInNestedLoopRule(Rule):
             # Pop loops whose body has now closed
             while loop_stack and brace_depth < loop_stack[-1]:
                 loop_stack.pop()
+            # Pop switches whose body has now closed
+            while switch_stack and brace_depth < switch_stack[-1]:
+                switch_stack.pop()
 
         return findings
 

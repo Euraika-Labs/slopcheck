@@ -210,7 +210,7 @@ class JsUnhandledPromiseConfig(BaseModel):
 class JsTimerNoCleanupConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    enabled: bool = True
+    enabled: bool = False  # Opt-in: fire-and-forget setTimeout for UI feedback is legitimate
 
 
 class JsLooseEqualityConfig(BaseModel):
@@ -400,7 +400,7 @@ class ManyPositionalArgsConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True
-    max_positional: int = 4
+    max_positional: int = 6  # Raised from 4: real-world codebases commonly have 5-6 args
 
 
 class RedundantSqlIndexConfig(BaseModel):
@@ -418,7 +418,7 @@ class UseAfterFreeConfig(BaseModel):
 class WeakFunctionNameConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    enabled: bool = True
+    enabled: bool = False  # Opt-in: names like handle, process, run are standard in JS/React
 
 
 class MultipleClassesPerFileConfig(BaseModel):
@@ -443,7 +443,7 @@ class BreakInNestedLoopConfig(BaseModel):
 class DangerousShellInMarkdownConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    enabled: bool = True
+    enabled: bool = False  # Opt-in: documentation showing dangerous commands is expected
 
 
 class ApiContractBreakingConfig(BaseModel):
