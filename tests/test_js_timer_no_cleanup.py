@@ -2,17 +2,23 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ai_slopcheck.config import AppConfig, JsTimerNoCleanupConfig
+from ai_slopcheck.config import AppConfig, JsTimerNoCleanupConfig, RulesConfig
 from ai_slopcheck.rules.generic.js_timer_no_cleanup import JsTimerNoCleanupRule
 
 
 def _scan(content: str, path: str = "src/Timer.tsx") -> list:
     rule = JsTimerNoCleanupRule()
+    # Rule is disabled by default — explicitly enable for tests.
+    config = AppConfig(
+        rules=RulesConfig(
+            js_timer_no_cleanup=JsTimerNoCleanupConfig(enabled=True)
+        )
+    )
     return rule.scan_file(
         repo_root=Path("/repo"),
         relative_path=path,
         content=content,
-        config=AppConfig(),
+        config=config,
     )
 
 

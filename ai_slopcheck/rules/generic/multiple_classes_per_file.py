@@ -19,7 +19,9 @@ _JS_EXTS = {".js", ".jsx", ".ts", ".tsx"}
 class MultipleClassesPerFileRule(Rule):
     rule_id = "multiple_classes_per_file"
     title = "Multiple top-level classes in a single file"
-    supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx"}
+    # Excludes .jsx/.tsx: React components rarely use classes, and colocating
+    # helper classes (ErrorBoundary, HOC wrappers) in the same file is standard.
+    supported_extensions = {".py", ".js", ".ts"}
 
     def scan_file(
         self,

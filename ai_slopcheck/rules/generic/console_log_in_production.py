@@ -10,9 +10,9 @@ from ai_slopcheck.rules.base import Rule
 # Matches console.METHOD( where METHOD is captured.
 _CONSOLE_RE = re.compile(r"\bconsole\.(log|warn|debug|info|error)\s*\(")
 
-# Path segments that indicate test/fixture/mock files.
+# Path segments that indicate test/fixture/mock/infra files — skip these.
 _SKIP_PATH_SEGMENTS = (
-    "test", "spec", "fixture", "mock", "__mocks__",
+    "test", "spec", "fixture", "mock", "__mocks__", "__tests__",
     "script", "cli", "bin", "tool", "build", "config",
     "setup", "migration", "seed", "gulp", "webpack",
     "vite.config", "next.config", "jest.config",
@@ -20,6 +20,14 @@ _SKIP_PATH_SEGMENTS = (
     # Logger implementations intentionally wrap console.*
     "logger", "logging", "log.ts", "log.js", "log.tsx",
     "debug.ts", "debug.js",
+    # Workers, agents, e2e tests, and infrastructure
+    "worker", "e2e", "agent", "docs", "example",
+    "cypress", "playwright", "puppeteer",
+)
+
+# Conditional logging is intentional — if (isDev) console.log()
+_CONDITIONAL_LOG_RE = re.compile(
+    r"\bif\s*\(.*(?:isDev|isDebug|DEBUG|NODE_ENV|__DEV__|process\.env)"
 )
 
 
@@ -48,10 +56,17 @@ class ConsoleLogInProductionRule(Rule):
         allowed = {m.lower() for m in rule_config.allowed_methods}
 
         findings: list[Finding] = []
-        for lineno, line in enumerate(content.splitlines(), start=1):
+        lines = content.splitlines()
+        for lineno, line in enumerate(lines, start=1):
             stripped = line.lstrip()
             # Skip commented-out console statements
             if stripped.startswith("//") or stripped.startswith("*"):
+                continue
+            # Skip conditional logging (e.g., if (isDev) console.log())
+            if _CONDITIONAL_LOG_RE.search(line):
+                continue
+            # Also check previous line for conditional guard
+            if lineno >= 2 and _CONDITIONAL_LOG_RE.search(lines[lineno - 2]):
                 continue
             m = _CONSOLE_RE.search(line)
             if not m:

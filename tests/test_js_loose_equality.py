@@ -23,9 +23,25 @@ def test_detects_loose_double_equal() -> None:
 
 
 def test_detects_loose_not_equal() -> None:
-    code = "if (x != null) {\n"
+    # != null is intentionally allowed (idiomatic nullish check).
+    # Use != with a non-null value to test detection.
+    code = 'if (x != "foo") {\n'
     findings = _scan(code)
     assert len(findings) == 1
+
+
+def test_allows_loose_null_check() -> None:
+    """!= null is idiomatic JS for checking both null and undefined."""
+    code = "if (x != null) {\n"
+    findings = _scan(code)
+    assert len(findings) == 0
+
+
+def test_allows_loose_undefined_check() -> None:
+    """== undefined is idiomatic JS for checking both null and undefined."""
+    code = "if (x == undefined) {\n"
+    findings = _scan(code)
+    assert len(findings) == 0
 
 
 def test_allows_strict_triple_equal() -> None:

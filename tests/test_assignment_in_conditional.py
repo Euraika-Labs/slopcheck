@@ -63,6 +63,26 @@ def test_skips_unsupported_extension() -> None:
     assert len(findings) == 0
 
 
+def test_allows_equals_inside_string_literal() -> None:
+    """= inside a string literal should not trigger (e.g., includes('key=value'))."""
+    code = """if (str.includes('key=value')) {\n"""
+    findings = _scan(code)
+    assert len(findings) == 0
+
+
+def test_allows_equals_inside_double_quoted_string() -> None:
+    code = 'if (url.includes("foo=bar")) {\n'
+    findings = _scan(code)
+    assert len(findings) == 0
+
+
+def test_allows_arrow_function_in_conditional() -> None:
+    """Arrow functions (=>) inside conditionals should not trigger."""
+    code = "if (items.filter(x => x > 0).length) {\n"
+    findings = _scan(code)
+    assert len(findings) == 0
+
+
 def test_disabled_rule() -> None:
     config = AppConfig()
     config.rules.assignment_in_conditional = AssignmentInConditionalConfig(enabled=False)

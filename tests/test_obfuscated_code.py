@@ -38,13 +38,14 @@ def test_detects_base64_decode_python() -> None:
 
 
 def test_detects_dense_hex_escapes() -> None:
-    # More than 3 hex escapes in one line
-    findings = _scan('x = "\\x41\\x42\\x43\\x44\\x45"\n')
+    # More than 6 hex escapes in one line (threshold raised from 3 to 6)
+    findings = _scan('x = "\\x41\\x42\\x43\\x44\\x45\\x46\\x47\\x48"\n')
     assert len(findings) == 1
 
 
-def test_allows_sparse_hex_escape() -> None:
-    findings = _scan('x = "\\x41"\n')
+def test_allows_moderate_hex_escapes() -> None:
+    """Up to 6 hex escapes is normal string encoding — should not flag."""
+    findings = _scan('x = "\\x41\\x42\\x43"\n')
     assert len(findings) == 0
 
 
@@ -79,6 +80,21 @@ def test_disabled_rule() -> None:
         content="eval(x)\n",
         config=config,
     )
+    assert len(findings) == 0
+
+
+def test_skips_minified_files() -> None:
+    """Files with .min. in the name should be skipped entirely."""
+    # Test that obfuscation scanner skips minified vendor files (atob call).
+    findings = _scan("const decoded = atob(data);\n", path="vendor/prettify.min.js")
+    assert len(findings) == 0
+
+
+def test_skips_files_with_long_average_lines() -> None:
+    """Bundled/minified files detected by long average line length."""
+    long_line = "a" * 300 + "\n"
+    content = long_line * 10 + "const decoded = atob(data);\n"
+    findings = _scan(content, path="dist/bundle.js")
     assert len(findings) == 0
 
 

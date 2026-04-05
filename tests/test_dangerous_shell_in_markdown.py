@@ -13,7 +13,12 @@ def rule() -> DangerousShellInMarkdownRule:
 
 @pytest.fixture
 def config() -> AppConfig:
-    return AppConfig()
+    """Rule is disabled by default — explicitly enable for tests."""
+    return AppConfig(
+        rules=RulesConfig(
+            dangerous_shell_in_markdown=DangerousShellInMarkdownConfig(enabled=True)
+        )
+    )
 
 
 def _in_fence(cmd: str, lang: str = "bash") -> str:

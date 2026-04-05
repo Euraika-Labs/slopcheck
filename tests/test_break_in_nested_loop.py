@@ -193,6 +193,58 @@ def test_go_break_in_nested_for(rule: BreakInNestedLoopRule, config: AppConfig) 
 
 
 # ---------------------------------------------------------------------------
+# JS — switch inside loop (should NOT flag break)
+# ---------------------------------------------------------------------------
+
+def test_js_break_in_switch_inside_loop_no_finding(
+    rule: BreakInNestedLoopRule, config: AppConfig
+) -> None:
+    """break inside a switch is correct JS — not a loop break."""
+    content = (
+        "for (let i = 0; i < 10; i++) {\n"
+        "  switch (items[i].type) {\n"
+        "    case 'a':\n"
+        "      break;\n"
+        "    case 'b':\n"
+        "      break;\n"
+        "    default:\n"
+        "      break;\n"
+        "  }\n"
+        "}\n"
+    )
+    findings = rule.scan_file(
+        repo_root=Path("."),
+        relative_path="src/foo.js",
+        content=content,
+        config=config,
+    )
+    assert findings == []
+
+
+def test_js_break_in_switch_inside_nested_loops_no_finding(
+    rule: BreakInNestedLoopRule, config: AppConfig
+) -> None:
+    """break in switch inside nested loops targets the switch, not a loop."""
+    content = (
+        "for (const row of rows) {\n"
+        "  for (const col of row.cols) {\n"
+        "    switch (col.kind) {\n"
+        "      case 'text':\n"
+        "        break;\n"
+        "    }\n"
+        "  }\n"
+        "}\n"
+    )
+    findings = rule.scan_file(
+        repo_root=Path("."),
+        relative_path="src/foo.ts",
+        content=content,
+        config=config,
+    )
+    assert findings == []
+
+
+# ---------------------------------------------------------------------------
 # Disabled
 # ---------------------------------------------------------------------------
 

@@ -17,13 +17,13 @@ def _scan(content: str, path: str = "src/config.py") -> list:
 
 
 def test_detects_password_assignment() -> None:
-    findings = _scan('password = "supersecretpassword123"\n')
+    findings = _scan('password = "xK9mRqL2vN7wP4jB"\n')
     assert len(findings) == 1
     assert "password" in findings[0].message.lower()
 
 
 def test_detects_api_key() -> None:
-    findings = _scan('api_key = "production-key-value-abc123"\n')
+    findings = _scan('api_key = "prod-kR3mN8pQ2vX7wL4j"\n')
     assert len(findings) == 1
 
 
@@ -33,7 +33,7 @@ def test_detects_secret_key() -> None:
 
 
 def test_detects_access_token() -> None:
-    findings = _scan('access_token = "ghp_realtoken12345"\n')
+    findings = _scan('access_token = "ghp_Xm9RqN2kP7wL4jBs"\n')
     assert len(findings) == 1
 
 
@@ -72,6 +72,30 @@ def test_disabled_rule() -> None:
         content='password = "supersecretpassword123"\n',
         config=config,
     )
+    assert len(findings) == 0
+
+
+def test_skips_markdown_files() -> None:
+    """Documentation files should be skipped entirely."""
+    findings = _scan('password = "realpassword"\n', path="docs/setup.md")
+    assert len(findings) == 0
+
+
+def test_skips_common_doc_placeholders() -> None:
+    """Common doc placeholder values like password123 should not flag."""
+    findings = _scan('password = "password123"\n')
+    assert len(findings) == 0
+
+
+def test_skips_error_message_lines() -> None:
+    """Lines that are error messages should not flag."""
+    findings = _scan('throw new Error("password = invalid_credential")\n')
+    assert len(findings) == 0
+
+
+def test_skips_log_statement_lines() -> None:
+    """Lines that are log statements should not flag."""
+    findings = _scan('console.log("api_key = redacted_value_here")\n')
     assert len(findings) == 0
 
 
