@@ -100,6 +100,8 @@ def _write_output(payload: str, output: str) -> None:
     if output == "-":
         typer.echo(payload)
     else:
+        if ".." in output:
+            raise SystemExit("slopcheck: invalid file path")
         output_path = Path(output)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(payload, encoding="utf-8")
@@ -392,6 +394,8 @@ def api_snapshot_command(
         ]
     )
 
+    if ".." in str(output):
+        raise SystemExit("slopcheck: invalid file path")
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(snapshot.model_dump_json(indent=2), encoding="utf-8")
     typer.echo(f"Wrote API snapshot ({len(routes)} route(s)) to {output}")

@@ -22,5 +22,7 @@ def load_baseline(path: Path | None) -> set[str]:
 
 
 def write_baseline(path: Path, fingerprints: list[str]) -> None:
+    if ".." in str(path):
+        raise Exception("Invalid file path")
     baseline = BaselineFile(fingerprints=sorted(set(fingerprints)))
     path.write_text(baseline.model_dump_json(indent=2), encoding="utf-8")
