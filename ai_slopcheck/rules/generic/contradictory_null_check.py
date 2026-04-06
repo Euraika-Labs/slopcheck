@@ -87,7 +87,8 @@ class ContradictoryNullCheckRule(Rule):
                 if body_indent <= if_indent:
                     break  # end of block
 
-                assert guarded_var is not None
+                if guarded_var is None:
+                    raise AssertionError
 
                 if check_kind in ("is_none", "not_x"):
                     # Flag attribute access or subscript on guarded_var
